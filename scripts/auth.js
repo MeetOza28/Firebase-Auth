@@ -1,13 +1,21 @@
+
+
 //listen for auth status changes
 auth.onAuthStateChanged(user => {
     // console.log(user);
     if (user) {
         console.log('user logged in: ',user);
+        //get data
+            db.collection('Guides').get().then(snapshot => {
+            setupGuides(snapshot.docs);
+            setupUI(user);
+        });
     } else {
         console.log('user logged out');
+        setupUI();
+        setupGuides([]);
     }
-})
-
+});
 
 // signup
 const signupForm = document.querySelector('#signup-form');
