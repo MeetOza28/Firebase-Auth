@@ -6,16 +6,36 @@ auth.onAuthStateChanged(user => {
     if (user) {
         console.log('user logged in: ',user);
         //get data
-            db.collection('Guides').get().then(snapshot => {
+        // db.collection('Guides').get().then(snapshot => {
+        db.collection('Guides').onSnapshot(snapshot => {
             setupGuides(snapshot.docs);
             setupUI(user);
-        });
+        }, err => {
+            console.log(err.message)}
+        );
     } else {
         console.log('user logged out');
         setupUI();
         setupGuides([]);
     }
 });
+
+// create new guide
+const createForm = document.querySelector('#create-form');
+createForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    db.collection('Guides').add({
+        title: createForm['title'].value,
+        content: createForm['content'].value
+    }).then(() => {
+        const modal = document.querySelector('#modal-create');
+        M.Modal.getInstance(modal).close();
+        createForm.reset();
+    }).catch(err => {
+        console.log(err.message);
+    })
+})
 
 // signup
 const signupForm = document.querySelector('#signup-form');
@@ -29,7 +49,12 @@ signupForm.addEventListener('submit', (e) => {
   // sign up the user
   auth.createUserWithEmailAndPassword(email, password).then(cred => {
     // console.log(cred.user);
+    return db.collection('users').doc(cred.user.uid).set({
+        bio: signupForm['signup-bio'].value
+    });
     // close the signup modal & reset form
+    
+  }).then(() => {
     const modal = document.querySelector('#modal-signup');
     M.Modal.getInstance(modal).close();
     signupForm.reset();
